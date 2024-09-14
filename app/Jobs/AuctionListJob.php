@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Exceptions\DateOutOfRangeException;
 use App\Exceptions\EmptyDatasetException;
 use App\Helpers\Config;
+use App\Repositories\ScheduleRepository;
 use Exception;
 use App\Enums\AuctionActType;
 use App\Exceptions\UnsetAuctionIdException;
@@ -60,7 +61,8 @@ class AuctionListJob implements ShouldQueue
         $auctions->each(function ($tr) {
             try {
                 $auctionId = $this->parser->auctionIdFromRow($tr);
-                AuctionDetailJob::dispatch($auctionId, $this->type);
+                ScheduleRepository::create($auctionId, $this->type);
+                //AuctionDetailJob::dispatch($auctionId, $this->type);
             } catch (UnsetAuctionIdException $e) {
                 Log::error($e->getMessage());
             }

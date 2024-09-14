@@ -38,7 +38,7 @@ class AuctionDetailJob implements ShouldQueue
             // Skip the process if auction is out of range
         } catch (Exception $e) {
             Log::error($e->getMessage() . ' in file ' . $e->getFile() . ' on line ' . $e->getLine());
-            throw $e;
+            //throw $e;
         }
     }
 }

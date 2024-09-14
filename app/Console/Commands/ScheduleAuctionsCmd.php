@@ -7,7 +7,7 @@ use App\Exceptions\UnsupportedAuctionTypeException;
 use App\Jobs\AuctionListJob;
 use Illuminate\Console\Command;
 
-class SyncNewAuctionsCmd extends Command
+class ScheduleAuctionsCmd extends Command
 {
     protected const ARGUMENT_TYPE = 'type';
 
