@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Auction extends Model
 {
@@ -53,4 +54,18 @@ class Auction extends Model
     ];
 
     protected $guarded = [self::ID];
+
+    protected function auctionProposer(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => Str::of($value)->limit(200),
+        );
+    }
+
+    protected function auctionAuctionCompany(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => Str::of($value)->limit(200),
+        );
+    }
 }

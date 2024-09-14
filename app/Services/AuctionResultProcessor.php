@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Services\Abstracts\AbstractAuctionProcessor;
+use App\Services\Abstracts\AuctionProcessor;
 use Illuminate\Support\Collection;
 
-class AuctionResultProcessor extends AbstractAuctionProcessor
+class AuctionResultProcessor extends AuctionProcessor
 {
     public function __construct(string $auctionId, Collection $details) {
         parent::__construct($auctionId, $details);

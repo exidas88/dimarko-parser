@@ -2,6 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Enums\AuctionActType;
+use App\Exceptions\DateOutOfRangeException;
+use App\Services\Abstracts\AuctionProcessor;
 use Exception;
 use App\Repositories\AuctionRepository;
 use App\Services\ParseAuctionDetails;
@@ -15,7 +18,7 @@ class AuctionDetailJob implements ShouldQueue
 {
     use Queueable, Dispatchable, InteractsWithQueue;
 
-    public function __construct(protected string $auctionId)
+    public function __construct(protected string $auctionId, protected AuctionActType $type)
     {
         //
     }
@@ -24,13 +27,15 @@ class AuctionDetailJob implements ShouldQueue
     {
         try {
 
-            $parser = new ParseAuctionDetails($this->auctionId);
+            $parser = new ParseAuctionDetails($this->auctionId, $this->type);
 
             $auction = $parser->retrieveData();
             $details = $parser->normalizeData($auction);
 
-            AuctionRepository::process($this->auctionId, $details);
+            AuctionProcessor::process($this->auctionId, $details);
 
+        } catch (DateOutOfRangeException) {
+            // Skip the process if auction is out of range
         } catch (Exception $e) {
             Log::error($e->getMessage() . ' in file ' . $e->getFile() . ' on line ' . $e->getLine());
             throw $e;

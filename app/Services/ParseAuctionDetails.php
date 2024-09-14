@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AuctionActType;
 use App\Enums\Label;
 use App\Enums\Param;
 use App\Exceptions\ParserException;
@@ -23,7 +24,7 @@ class ParseAuctionDetails extends AbstractParserService
     /**
      * @throws Exception
      */
-    public function __construct(protected string $auctionId)
+    public function __construct(protected string $auctionId, protected AuctionActType $type)
     {
         parent::__construct();
         $this->init();
@@ -39,6 +40,11 @@ class ParseAuctionDetails extends AbstractParserService
      */
     public function init(): void
     {
+        if ($this->debug) {
+            $this->setDom();
+            return;
+        }
+
         $this->setUrl(config('parser.action_detail_base_url'));
 
         $parameters = [

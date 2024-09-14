@@ -2,10 +2,12 @@
 
 namespace App\Services\Abstracts;
 
+use App\Enums\AuctionActType;
 use App\Exceptions\ParserException;
 use App\Services\Interfaces\HtmlParserInterface;
 use App\Services\ParseAuctionDetails;
 use App\Services\ParseAuctionsList;
+use Illuminate\Support\Arr;
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
@@ -18,11 +20,13 @@ abstract class AbstractParserService implements HtmlParserInterface
 {
     protected Dom $dom;
     protected string $url;
+    protected bool $debug;
     protected array $parameters;
 
     public function __construct()
     {
         $this->dom = new Dom;
+        $this->debug = config('parser.debug');
     }
 
     public function setUrl(string $url): void
@@ -50,10 +54,10 @@ abstract class AbstractParserService implements HtmlParserInterface
      */
     protected function setDom(): void
     {
-        $debug = config('app.debug');
+        $debug = config('parser.debug');
 
         if ($debug) {
-            $this->dom->loadFromFile($this->filePath());
+            $this->dom->loadFromFile($this->resolveFile());
             return;
         }
 
@@ -64,15 +68,18 @@ abstract class AbstractParserService implements HtmlParserInterface
     /**
      * @throws ParserException
      */
-    protected function filePath(): string
+    protected function resolveFile(): string
     {
-        $file = match(get_class($this)) {
-            ParseAuctionsList::class => 'auctions.html',
-            ParseAuctionDetails::class => 'auction-new.html',
+        return match(get_class($this)) {
+            ParseAuctionsList::class => config('parser.files.list'),
+            ParseAuctionDetails::class => $this->resolveFileFromAuctionType(),
             default => throw ParserException::unresolvableFile()
         };
+    }
 
-        return public_path($file);
+    protected function resolveFileFromAuctionType(): string
+    {
+        return Arr::get(config('parser.files'), $this->type->value);
     }
 
     abstract public function retrieveData(): DomCollection;

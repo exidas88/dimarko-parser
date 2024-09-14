@@ -4,9 +4,12 @@ namespace App\Services;
 
 use App\Enums\AuctionActType;
 use App\Enums\Param;
+use App\Exceptions\DateOutOfRangeException;
+use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\ParserException;
 use App\Exceptions\UnsetAuctionIdException;
 use App\Services\Abstracts\AbstractParserService;
+use App\Services\Abstracts\AuctionProcessor;
 use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -28,9 +31,10 @@ class ParseAuctionsList extends AbstractParserService
      */
     public function __construct(
         protected AuctionActType $type,
-        protected int $page,
-        protected ?int $months
-    ) {
+        protected int            $page,
+        protected ?int           $months
+    )
+    {
         parent::__construct();
         $this->init();
     }
@@ -63,11 +67,13 @@ class ParseAuctionsList extends AbstractParserService
      * @throws ChildNotFoundException
      * @throws NotLoadedException
      * @throws ParserException
+     * @throws EmptyDatasetException
+     * @throws DateOutOfRangeException
      */
     public function retrieveData(): DomCollection
     {
         $list = $this->dom->find('table.search_results')->find('tbody')->find('tr');
-        $list->count() || throw ParserException::emptyDataset();
+        $list->count() || throw new EmptyDatasetException;
 
         return $list;
     }
