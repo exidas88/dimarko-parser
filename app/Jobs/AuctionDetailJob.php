@@ -3,19 +3,17 @@
 namespace App\Jobs;
 
 use Exception;
-use App\Services\ParseAuctionDetail;
+use App\Repositories\AuctionRepository;
+use App\Services\ParseAuctionDetails;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
-use PHPHtmlParser\Dom;
 
-class ParseAuctionJob implements ShouldQueue
+class AuctionDetailJob implements ShouldQueue
 {
     use Queueable, Dispatchable, InteractsWithQueue;
-
-    protected Dom $html;
 
     public function __construct(protected string $auctionId)
     {
@@ -25,14 +23,17 @@ class ParseAuctionJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $parser = new ParseAuctionDetail($this->auctionId);
-            $auction = $parser->auction();
 
-            $auction->each(function ($node) use($parser) {
-                dd($node->innerHtml);
-            });
+            $parser = new ParseAuctionDetails($this->auctionId);
+
+            $auction = $parser->retrieveData();
+            $details = $parser->normalizeData($auction);
+
+            AuctionRepository::process($this->auctionId, $details);
+
         } catch (Exception $e) {
-            Log::error($e->getMessage());
+            Log::error($e->getMessage() . ' in file ' . $e->getFile() . ' on line ' . $e->getLine());
+            throw $e;
         }
     }
 }

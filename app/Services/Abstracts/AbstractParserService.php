@@ -1,16 +1,20 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Abstracts;
 
 use App\Exceptions\ParserException;
+use App\Services\Interfaces\HtmlParserInterface;
+use App\Services\ParseAuctionDetails;
+use App\Services\ParseAuctionsList;
 use PHPHtmlParser\Dom;
+use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
 use PHPHtmlParser\Exceptions\CircularException;
 use PHPHtmlParser\Exceptions\CurlException;
 use PHPHtmlParser\Exceptions\LogicalException;
 use PHPHtmlParser\Exceptions\StrictException;
 
-abstract class AbstractParserService
+abstract class AbstractParserService implements HtmlParserInterface
 {
     protected Dom $dom;
     protected string $url;
@@ -64,10 +68,12 @@ abstract class AbstractParserService
     {
         $file = match(get_class($this)) {
             ParseAuctionsList::class => 'auctions.html',
-            ParseAuctionDetail::class => 'auction-new.html',
+            ParseAuctionDetails::class => 'auction-new.html',
             default => throw ParserException::unresolvableFile()
         };
 
         return public_path($file);
     }
+
+    abstract public function retrieveData(): DomCollection;
 }

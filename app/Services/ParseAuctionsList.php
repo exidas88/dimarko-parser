@@ -2,13 +2,15 @@
 
 namespace App\Services;
 
+use App\Enums\AuctionActType;
 use App\Enums\Param;
 use App\Exceptions\ParserException;
+use App\Exceptions\UnsetAuctionIdException;
+use App\Services\Abstracts\AbstractParserService;
 use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use PHPHtmlParser\Dom;
-use PHPHtmlParser\Dom\Collection;
+use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
 use PHPHtmlParser\Exceptions\CircularException;
 use PHPHtmlParser\Exceptions\CurlException;
@@ -24,8 +26,11 @@ class ParseAuctionsList extends AbstractParserService
     /**
      * @throws Exception
      */
-    public function __construct(protected int $page)
-    {
+    public function __construct(
+        protected AuctionActType $type,
+        protected int $page,
+        protected ?int $months
+    ) {
         parent::__construct();
         $this->init();
     }
@@ -41,10 +46,12 @@ class ParseAuctionsList extends AbstractParserService
     public function init(): void
     {
         $this->setUrl(config('parser.action_source_base_url'));
+        $months = $this->months ?? self::AUCTIONS_INTERVAL_MONTHS;
 
         $parameters = [
             Param::start->value => $this->page,
-            Param::dateFrom->value => now()->addMonths(self::AUCTIONS_INTERVAL_MONTHS)->toDateString(),
+            Param::type->value => $this->type->name,
+            Param::dateFrom->value => now()->addMonths($months)->toDateString(),
             Param::submit->value => self::AUCTIONS_SUBMIT_VALUE
         ];
 
@@ -57,7 +64,7 @@ class ParseAuctionsList extends AbstractParserService
      * @throws NotLoadedException
      * @throws ParserException
      */
-    public function auctions(): Collection
+    public function retrieveData(): DomCollection
     {
         $list = $this->dom->find('table.search_results')->find('tbody')->find('tr');
         $list->count() || throw ParserException::emptyDataset();
@@ -69,7 +76,7 @@ class ParseAuctionsList extends AbstractParserService
      * Incoming node represents the row from the auctions list.
      * Returned is the unique auction hash as identifier.
      *
-     * @throws ParserException
+     * @throws UnsetAuctionIdException
      */
     public function auctionIdFromRow($node): string
     {
@@ -81,7 +88,7 @@ class ParseAuctionsList extends AbstractParserService
     /**
      * Split URI to separate parameters and extract actId.
      *
-     * @throws ParserException
+     * @throws UnsetAuctionIdException
      */
     protected static function retrieveAuctionIdFromUri(string $uri): string
     {
@@ -89,7 +96,7 @@ class ParseAuctionsList extends AbstractParserService
         parse_str($parameters, $queryArray);
 
         $auctionId = Arr::get($queryArray, 'actId');
-        $auctionId || throw ParserException::unsetAuctionId();
+        $auctionId || throw new UnsetAuctionIdException;
 
         return $auctionId;
     }
