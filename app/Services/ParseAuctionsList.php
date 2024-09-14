@@ -7,9 +7,9 @@ use App\Enums\Param;
 use App\Exceptions\DateOutOfRangeException;
 use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\ParserException;
+use App\Exceptions\RequestLimitReachedException;
 use App\Exceptions\UnsetAuctionIdException;
 use App\Services\Abstracts\AbstractParserService;
-use App\Services\Abstracts\AuctionProcessor;
 use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -17,6 +17,7 @@ use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
 use PHPHtmlParser\Exceptions\CircularException;
 use PHPHtmlParser\Exceptions\CurlException;
+use PHPHtmlParser\Exceptions\EmptyCollectionException;
 use PHPHtmlParser\Exceptions\LogicalException;
 use PHPHtmlParser\Exceptions\NotLoadedException;
 use PHPHtmlParser\Exceptions\StrictException;
@@ -55,7 +56,8 @@ class ParseAuctionsList extends AbstractParserService
         $parameters = [
             Param::start->value => $this->page,
             Param::type->value => $this->type->name,
-            Param::dateFrom->value => now()->addMonths($months)->toDateString(),
+            Param::dateFrom->value => now()->subMonths($months)->toDateString(),
+            Param::dateTo->value => now()->addMonths($months)->toDateString(),
             Param::submit->value => self::AUCTIONS_SUBMIT_VALUE
         ];
 
@@ -69,11 +71,16 @@ class ParseAuctionsList extends AbstractParserService
      * @throws ParserException
      * @throws EmptyDatasetException
      * @throws DateOutOfRangeException
+     * @throws RequestLimitReachedException
      */
     public function retrieveData(): DomCollection
     {
         $list = $this->dom->find('table.search_results')->find('tbody')->find('tr');
         $list->count() || throw new EmptyDatasetException;
+
+        // Get sample data from first column for validation
+        $sample = $list->find('td', 0)->text;
+        $this->validateData($sample);
 
         return $list;
     }
@@ -83,6 +90,7 @@ class ParseAuctionsList extends AbstractParserService
      * Returned is the unique auction hash as identifier.
      *
      * @throws UnsetAuctionIdException
+     * @throws EmptyCollectionException
      */
     public function auctionIdFromRow($node): string
     {

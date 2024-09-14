@@ -14,4 +14,11 @@ class ScheduleRepository
             Schedule::TYPE => $type
         ]);
     }
+
+    public static function delete(string $actId): void
+    {
+        Schedule::query()
+            ->where(Schedule::ACT_ID, $actId)
+            ->delete();
+    }
 }

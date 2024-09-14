@@ -2,12 +2,15 @@
 
 namespace App\Services\Abstracts;
 
-use App\Enums\AuctionActType;
+use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\ParserException;
+use App\Exceptions\RequestLimitReachedException;
+use App\Helpers\Constant;
 use App\Services\Interfaces\HtmlParserInterface;
 use App\Services\ParseAuctionDetails;
 use App\Services\ParseAuctionsList;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
@@ -18,9 +21,9 @@ use PHPHtmlParser\Exceptions\StrictException;
 
 abstract class AbstractParserService implements HtmlParserInterface
 {
+    public bool $debug;
     protected Dom $dom;
     protected string $url;
-    protected bool $debug;
     protected array $parameters;
 
     public function __construct()
@@ -54,9 +57,7 @@ abstract class AbstractParserService implements HtmlParserInterface
      */
     protected function setDom(): void
     {
-        $debug = config('parser.debug');
-
-        if ($debug) {
+        if (config('parser.debug')) {
             $this->dom->loadFromFile($this->resolveFile());
             return;
         }
@@ -80,6 +81,19 @@ abstract class AbstractParserService implements HtmlParserInterface
     protected function resolveFileFromAuctionType(): string
     {
         return Arr::get(config('parser.files'), $this->type->value);
+    }
+
+    /**
+     * @throws RequestLimitReachedException
+     * @throws EmptyDatasetException
+     */
+    public function validateData(string $text): void
+    {
+        Str::of($text)->contains([Constant::EMPTY_DATASET_MESSAGE, Constant::INVALID_AUCTION_ID_MESSAGE])
+        && throw new EmptyDatasetException;
+
+        Str::of($text)->contains(Constant::LIMIT_REACHED_MESSAGE)
+        && throw new RequestLimitReachedException;
     }
 
     abstract public function retrieveData(): DomCollection;

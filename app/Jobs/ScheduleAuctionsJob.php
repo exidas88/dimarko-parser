@@ -2,12 +2,14 @@
 
 namespace App\Jobs;
 
-use App\Exceptions\DateOutOfRangeException;
-use App\Exceptions\EmptyDatasetException;
-use App\Helpers\Config;
-use App\Repositories\ScheduleRepository;
+use App\Exceptions\RequestLimitReachedException;
+use App\Repositories\PageScheduleRepository;
 use Exception;
+use App\Helpers\Config;
+use App\Models\PageSchedule;
 use App\Enums\AuctionActType;
+use App\Repositories\ScheduleRepository;
+use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\UnsetAuctionIdException;
 use App\Services\Abstracts\AbstractParserService;
 use App\Services\ParseAuctionsList;
@@ -17,8 +19,9 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 use PHPHtmlParser\Dom\Collection as DomCollection;
+use PHPHtmlParser\Exceptions\EmptyCollectionException;
 
-class AuctionListJob implements ShouldQueue
+class ScheduleAuctionsJob implements ShouldQueue
 {
     use Queueable, Dispatchable, InteractsWithQueue;
 
@@ -29,18 +32,22 @@ class AuctionListJob implements ShouldQueue
     public function handle(): void
     {
         try {
-
-            // Retrieve auction from current page
+            // Retrieve table of auctions from current page
             $auctions = $this->parser()->retrieveData();
 
-            // Dispatch separate job for each auction
+            // Schedule auction ids to be processed
             $this->processAuctions($auctions);
 
+            // Set last processed page in database
+            $this->updatePageSchedule();
+
             // Dispatch job to parse next page
-            $this->moveToNextPage();
+            //$this->moveToNextPage();
 
         } catch (EmptyDatasetException) {
-            Log::info("Finished with processing auctions: ", $this->logAttributes());
+            PageScheduleRepository::delete($this->type);
+        } catch (RequestLimitReachedException) {
+            // Request quota reached
         } catch (Exception $e) {
             Log::error("Error during processing list of auctions: " . $e->getMessage());
         }
@@ -62,17 +69,24 @@ class AuctionListJob implements ShouldQueue
             try {
                 $auctionId = $this->parser->auctionIdFromRow($tr);
                 ScheduleRepository::create($auctionId, $this->type);
-                //AuctionDetailJob::dispatch($auctionId, $this->type);
-            } catch (UnsetAuctionIdException $e) {
+            } catch (Exception $e) {
                 Log::error($e->getMessage());
             }
         });
     }
 
+    protected function updatePageSchedule(): void
+    {
+        PageSchedule::query()
+            ->where(PageSchedule::TYPE, $this->type)
+            ->update([
+                PageSchedule::PAGE => $this->page
+            ]);
+    }
+
     protected function moveToNextPage(): void
     {
-        $this->page++;
-        AuctionListJob::dispatch($this->type, $this->page);
+        ScheduleAuctionsJob::dispatch($this->type, $this->page);
     }
 
     protected function logAttributes(): array

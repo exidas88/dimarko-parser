@@ -3,23 +3,25 @@
 namespace App\Console\Commands;
 
 use App\Enums\AuctionActType;
-use App\Jobs\AuctionDetailJob;
+use App\Jobs\ProcessAuctionJob;
 use App\Models\Schedule;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
-class ProcessScheduledAuctionsCmd extends Command
+class ProcessAuctionsCmd extends Command
 {
     protected const DEFAULT_LIMIT = 5;
+    protected const OPTION_TYPE = 'type';
+    protected const OPTION_LIMIT = 'limit';
 
-    protected $signature = 'auctions:process {--type=} {--limit=}';
+    protected $signature = 'auctions:process {--'.self::OPTION_TYPE.'=} {--'.self::OPTION_LIMIT.'=}';
     protected $description = 'Process scheduled auctions by type';
 
     public function handle(): void
     {
         $this->query()->map(function (Schedule $schedule) {
-            AuctionDetailJob::dispatch(
+            ProcessAuctionJob::dispatch(
                 auctionId: $schedule->actId,
                 type: $schedule->type
             );
@@ -29,8 +31,8 @@ class ProcessScheduledAuctionsCmd extends Command
 
     protected function query(): Collection
     {
-        $type = $this->option('type');
-        $limit = $this->option('limit') ?? self::DEFAULT_LIMIT;
+        $type = $this->option(self::OPTION_TYPE);
+        $limit = $this->option(self::OPTION_LIMIT) ?? self::DEFAULT_LIMIT;
 
         return Schedule::query()
             ->when($type, fn(Builder $builder) => $builder

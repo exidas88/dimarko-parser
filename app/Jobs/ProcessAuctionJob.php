@@ -2,11 +2,13 @@
 
 namespace App\Jobs;
 
+use Exception;
 use App\Enums\AuctionActType;
 use App\Exceptions\DateOutOfRangeException;
+use App\Exceptions\EmptyDatasetException;
+use App\Exceptions\RequestLimitReachedException;
+use App\Repositories\ScheduleRepository;
 use App\Services\Abstracts\AuctionProcessor;
-use Exception;
-use App\Repositories\AuctionRepository;
 use App\Services\ParseAuctionDetails;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +16,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 
-class AuctionDetailJob implements ShouldQueue
+class ProcessAuctionJob implements ShouldQueue
 {
     use Queueable, Dispatchable, InteractsWithQueue;
 
@@ -34,11 +36,15 @@ class AuctionDetailJob implements ShouldQueue
 
             AuctionProcessor::process($this->auctionId, $details);
 
+        } catch (EmptyDatasetException) {
+            ScheduleRepository::delete($this->auctionId); // Auction not found
+            dd('Empty dataset');
+        } catch (RequestLimitReachedException) {
+            dd('Request limit reached');
         } catch (DateOutOfRangeException) {
-            // Skip the process if auction is out of range
+            dd('Date out of range');
         } catch (Exception $e) {
             Log::error($e->getMessage() . ' in file ' . $e->getFile() . ' on line ' . $e->getLine());
-            //throw $e;
         }
     }
 }

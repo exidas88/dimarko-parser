@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Enums\AuctionActType;
 use App\Enums\Label;
 use App\Enums\Param;
+use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\ParserException;
+use App\Exceptions\RequestLimitReachedException;
 use App\Services\Abstracts\AbstractParserService;
 use Exception;
 use Illuminate\Support\Collection;
@@ -56,14 +58,19 @@ class ParseAuctionDetails extends AbstractParserService
     }
 
     /**
+     * @return DomCollection
      * @throws ChildNotFoundException
+     * @throws EmptyDatasetException
      * @throws NotLoadedException
-     * @throws ParserException
+     * @throws RequestLimitReachedException
      */
     public function retrieveData(): DomCollection
     {
+        $sample = $this->dom->find('div.listing')->text;
+        $this->validateData($sample);
+
         $nodes = $this->dom->find('div.listing')->find('p');
-        $nodes->count() || throw ParserException::emptyDataset();
+        $nodes->count() || throw new EmptyDatasetException;
 
         return $nodes;
     }
