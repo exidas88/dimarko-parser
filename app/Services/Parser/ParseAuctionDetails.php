@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Parser;
 
-use App\Enums\AuctionActType;
+use Exception;
 use App\Enums\Label;
 use App\Enums\Param;
+use Illuminate\Support\Str;
+use App\Enums\AuctionActType;
+use Illuminate\Support\Collection;
 use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\ParserException;
 use App\Exceptions\RequestLimitReachedException;
 use App\Services\Abstracts\AbstractParserService;
-use Exception;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
 use PHPHtmlParser\Exceptions\CircularException;
@@ -86,14 +86,34 @@ class ParseAuctionDetails extends AbstractParserService
         $auction->each(function ($node) use ($details) {
             try {
                 $label = $node->find('span.key')->text;
-                $value = $node->find('span.value')->innerHtml;
-                empty(trim($value)) || $details->put($label, $value);
+                $value = self::normalizeValue($node->find('span.value'));
+                empty($value) || $details->put($label, $value);
             } catch (EmptyCollectionException) {
                 //
             }
         });
 
         return self::mapLabelsToEnum($details);
+    }
+
+    /**
+     * Method normalizes label values. If value contains anchors,
+     * convert it to readable array of links or return plain text.
+     */
+    protected static function normalizeValue($node): string|array|null
+    {
+        $anchors = $node->find('a');
+
+        // Convert links to array ['text'=>'uri']
+        if ($anchors->count()) {
+            $links = [];
+            foreach ($anchors as $anchor) {
+                $links[trim($anchor->text)] = $anchor->getAttribute('href');
+            }
+            return $links;
+        }
+
+        return trim($node->innerHtml);
     }
 
     /**

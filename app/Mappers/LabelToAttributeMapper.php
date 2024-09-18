@@ -7,12 +7,9 @@ use Illuminate\Support\Collection;
 
 class LabelToAttributeMapper
 {
-    public function __construct(protected Collection $details)
-    {
-        //
-    }
+    public function __construct(protected Collection $details) {}
 
-    public function extract(Label $label): string
+    public function extract(Label $label): string|array|null
     {
         return $this->details->get($label->name);
     }

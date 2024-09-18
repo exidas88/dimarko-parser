@@ -21,6 +21,8 @@ class PageSchedule extends Model
     public const PAGE = 'page';
     public const TYPE = 'type';
 
+    public const DELETED_AT = 'deleted_at';
+
     protected $casts = [
         self::TYPE => AuctionActType::class
     ];

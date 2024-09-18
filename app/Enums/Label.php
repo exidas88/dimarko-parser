@@ -13,5 +13,6 @@ enum Label: string
     case placeNote = 'Bližšie označenie miesta konania dražby';
     case dateTime = 'Dátum a čas otvorenia dražby';
     case subject = 'Druh predmetu dražby';
+    case relations = 'Súvisiace spisové značky';
     case documents = 'Uverejnené listiny';
 }

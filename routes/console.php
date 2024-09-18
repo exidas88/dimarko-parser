@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use App\Console\Commands\ProcessAuctionsCmd;
+use App\Console\Commands\ScheduleAuctionsCmd;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote')->hourly();
+//Schedule::command(ScheduleAuctionsCmd::class)->cron('0-56/4 * * * *');
+//Schedule::command(ProcessAuctionsCmd::class)->cron('2-58/4 * * * *');

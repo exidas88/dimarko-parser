@@ -5,10 +5,11 @@ namespace App\Services\Abstracts;
 use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\ParserException;
 use App\Exceptions\RequestLimitReachedException;
+use App\Exceptions\UnsetAuctionIdException;
 use App\Helpers\Constant;
 use App\Services\Interfaces\HtmlParserInterface;
-use App\Services\ParseAuctionDetails;
-use App\Services\ParseAuctionsList;
+use App\Services\Parser\ParseAuctionDetails;
+use App\Services\Parser\ParseAuctionsList;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use PHPHtmlParser\Dom;
@@ -94,6 +95,22 @@ abstract class AbstractParserService implements HtmlParserInterface
 
         Str::of($text)->contains(Constant::LIMIT_REACHED_MESSAGE)
         && throw new RequestLimitReachedException;
+    }
+
+    /**
+     * Split URI to separate parameters and extract actId.
+     *
+     * @throws UnsetAuctionIdException
+     */
+    public static function retrieveAuctionIdFromUri(string $uri): string
+    {
+        $parameters = Str::of($uri)->after('?');
+        parse_str($parameters, $queryArray);
+
+        $auctionId = Arr::get($queryArray, 'actId');
+        $auctionId || throw new UnsetAuctionIdException;
+
+        return $auctionId;
     }
 
     abstract public function retrieveData(): DomCollection;

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property string $actId
+ * @property string $source_actId
  * @property AuctionActType $type
  */
 class Schedule extends Model
@@ -17,6 +18,7 @@ class Schedule extends Model
 
     public const ID = 'id';
     public const ACT_ID = 'actId';
+    public const SOURCE_ACT_ID = 'source_actId';
     public const TYPE = 'type';
 
     protected $casts = [

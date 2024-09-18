@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+/**
+ * @property array $auction_connections
+ */
 class Auction extends Model
 {
     use SoftDeletes;
@@ -50,7 +53,8 @@ class Auction extends Model
     public $timestamps = true;
 
     protected $casts = [
-        self::DATE => 'date'
+        self::DATE => 'date',
+        self::CONNECTIONS => 'array'
     ];
 
     protected $guarded = [self::ID];
@@ -68,4 +72,26 @@ class Auction extends Model
             set: fn (string $value) => Str::of($value)->limit(200),
         );
     }
+
+    public function setAuctionConnectionsAttribute($value): void
+    {
+        // Get the existing auction_connections or set an empty array if null
+        $currentConnections = $this->auction_connections ?? [];
+
+        // Add the new string to the existing array
+        $currentConnections[] = $value;
+
+        // Ensure the array only contains unique values
+        $uniqueConnections = array_unique($currentConnections);
+
+        // Assign the unique array back to the attribute
+        $this->attributes[self::CONNECTIONS] = json_encode($uniqueConnections);
+    }
+
+//    protected function auctionConnections(): Attribute
+//    {
+//        return Attribute::make(
+//            set: fn (string $value) => dd($value),
+//        );
+//    }
 }
