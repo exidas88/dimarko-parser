@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use Exception;
+use Throwable;
 use App\Enums\AuctionActType;
 use App\Exceptions\DailyLimitReachedException;
 use App\Exceptions\EmptyDatasetException;
@@ -12,7 +14,6 @@ use App\Repositories\PageScheduleRepository;
 use App\Repositories\ScheduleRepository;
 use App\Services\Abstracts\AbstractParserService;
 use App\Services\Parser\ParseAuctionsList;
-use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
@@ -31,6 +32,7 @@ class ScheduleAuctionsJob implements ShouldQueue
     public function handle(): void
     {
         try {
+
             // Retrieve table of auctions from current page
             $auctions = $this->parser()->retrieveData();
 
@@ -40,12 +42,8 @@ class ScheduleAuctionsJob implements ShouldQueue
             // Set last processed page in database
             $this->updatePageSchedule();
 
-        } catch (EmptyDatasetException) {
-            $this->handleEmptyDatasetException();
-        } catch (RequestLimitReachedException) {
-            $this->handleRequestLimitReachedException();
-        } catch (Exception $e) {
-            Log::error("Error during processing list of auctions: " . $e->getMessage(), $this->logAttributes());
+        } catch (Throwable $e) {
+            $this->handleException($e);
         }
     }
 
@@ -89,6 +87,15 @@ class ScheduleAuctionsJob implements ShouldQueue
         ];
     }
 
+    protected function handleException(Throwable $exception): void
+    {
+        match(get_class($exception)) {
+            EmptyDatasetException::class => $this->handleEmptyDatasetException(),
+            RequestLimitReachedException::class => $this->handleRequestLimitReachedException(),
+            default => $this->logErrorException($exception)
+        };
+    }
+
     protected function handleEmptyDatasetException(): void
     {
         try {
@@ -101,5 +108,10 @@ class ScheduleAuctionsJob implements ShouldQueue
     protected function handleRequestLimitReachedException(): void
     {
         //
+    }
+
+    protected function logErrorException(Throwable $exception): void
+    {
+        Log::error("Error during processing list of auctions: " . $exception->getMessage(), $this->logAttributes());
     }
 }
