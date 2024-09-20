@@ -48,15 +48,15 @@ class ProcessAuctionJob implements ShouldQueue
         } catch (EmptyDatasetException) {
             // Auction not found
             ScheduleRepository::delete($this->auctionId);
-            dd('Empty dataset');
+//            dd('Empty dataset');
         } catch (RequestLimitReachedException) {
-            dd('Rate limit reached');
+//            dd('Rate limit reached');
             // Request limit reached
         } catch (DateOutOfRangeException) {
-            dd('Date out of range');
+//            dd('Date out of range');
             // Auction date out of range
         } catch (Exception $e) {
-            Log::error($e->getMessage() . ' in file ' . $e->getFile() . ' on line ' . $e->getLine());
+            Log::error('Error actId ['.$this->auctionId.'] of type ['.$this->type->value.']: ' . $e->getMessage());
         }
     }
 

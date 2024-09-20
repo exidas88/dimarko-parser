@@ -9,7 +9,6 @@ use App\Mappers\LabelToAttributeMapper;
 use App\Models\Auction;
 use App\Repositories\ScheduleRepository;
 use App\Services\Interfaces\AuctionProcessorInterface;
-use App\Services\NewAuctionProcessor;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -27,7 +26,8 @@ abstract class AuctionProcessor implements AuctionProcessorInterface
     {
         $this->mapper = new LabelToAttributeMapper($this->details);
 
-        // Auction id is changed to source actId if needed
+        // AuctionId is changed to source actId if the processing
+        // auction has source_actId defined in Schedule model.
         $this->auctionId = $this->resolveAuctionId();
     }
 
@@ -40,21 +40,14 @@ abstract class AuctionProcessor implements AuctionProcessorInterface
     }
 
     /**
-     * All auction types except the "new" one are supposed to just update the
-     * original auction, so we need to resolve the source actId first to be
-     * able to update it by the fresh data retrieved from source.
+     * Repeated, changed and other types should update its originals. If the source
+     * id is not set, the incoming auction id is considered as source id instead.
      *
      * @throws ModelNotFoundException
      */
     protected function resolveAuctionId(): string
     {
-        // New auctions have source id set automatically
-        if ($this instanceof NewAuctionProcessor) {
-            return $this->auctionId;
-        }
-
-        // Repeated, changed and other types should update its originals
-        return ScheduleRepository::sourceAuctionId($this->auctionId);
+        return ScheduleRepository::sourceAuctionId($this->auctionId) ?? $this->auctionId;
     }
 
     /**

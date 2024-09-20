@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\AuctionActType;
+use App\Exceptions\DailyLimitReachedException;
 use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\RequestLimitReachedException;
 use App\Helpers\Config;
@@ -40,9 +41,9 @@ class ScheduleAuctionsJob implements ShouldQueue
             $this->updatePageSchedule();
 
         } catch (EmptyDatasetException) {
-            PageScheduleRepository::moveToNextAuctionType();
+            $this->handleEmptyDatasetException();
         } catch (RequestLimitReachedException) {
-            // Request quota reached
+            $this->handleRequestLimitReachedException();
         } catch (Exception $e) {
             Log::error("Error during processing list of auctions: " . $e->getMessage(), $this->logAttributes());
         }
@@ -86,5 +87,19 @@ class ScheduleAuctionsJob implements ShouldQueue
             'page' => $this->page,
             'type' => $this->type->name
         ];
+    }
+
+    protected function handleEmptyDatasetException(): void
+    {
+        try {
+            PageScheduleRepository::moveToNextAuctionType();
+        } catch (DailyLimitReachedException) {
+            //
+        }
+    }
+
+    protected function handleRequestLimitReachedException(): void
+    {
+        //
     }
 }

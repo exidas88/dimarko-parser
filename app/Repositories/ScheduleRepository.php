@@ -8,7 +8,7 @@ use App\Models\Schedule;
 
 class ScheduleRepository
 {
-    public static function create(string $actId, string $sourceActId, AuctionActType $type): void
+    public static function create(string $actId, ?string $sourceActId, AuctionActType $type): void
     {
         // Each actId is stored in auction_connections attribute after its successfully stored.
         // None of the auction cases should be processed multiple times, so we check for the
@@ -25,14 +25,14 @@ class ScheduleRepository
         ]);
     }
 
-    public static function sourceAuctionId(string $actId): string
+    public static function sourceAuctionId(string $actId): ?string
     {
         $schedule = Schedule::query()
             ->select(Schedule::SOURCE_ACT_ID)
             ->where(Schedule::ACT_ID, $actId)
-            ->firstOrFail();
+            ->first();
 
-        return $schedule->{Schedule::SOURCE_ACT_ID};
+        return $schedule?->{Schedule::SOURCE_ACT_ID};
     }
 
     public static function delete(string $actId): void

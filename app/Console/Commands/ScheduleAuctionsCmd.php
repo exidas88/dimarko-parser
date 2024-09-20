@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\AuctionActType;
+use App\Exceptions\DailyLimitReachedException;
 use App\Jobs\ScheduleAuctionsJob;
 use App\Models\PageSchedule;
 use App\Repositories\PageScheduleRepository;
@@ -21,8 +22,13 @@ class ScheduleAuctionsCmd extends Command
     {
         $limit = $this->option(self::OPTION_LIMIT) ?? self::DEFAULT_LIMIT;
 
-        $type = $this->resolveType();
-        $start = $this->resolvePage();
+        try {
+            $type = $this->resolveType();
+            $start = $this->resolvePage();
+        } catch (DailyLimitReachedException) {
+            $this->info('Daily limit has been reached.');
+            return;
+        }
 
         $finish = $start + $limit;
         $start++; // Start from the next page
@@ -32,6 +38,9 @@ class ScheduleAuctionsCmd extends Command
         }
     }
 
+    /**
+     * @throws DailyLimitReachedException
+     */
     protected function resolvePage(): int
     {
         $pageSchedule = PageScheduleRepository::current() ?? PageScheduleRepository::create();
@@ -39,6 +48,9 @@ class ScheduleAuctionsCmd extends Command
         return $pageSchedule->page;
     }
 
+    /**
+     * @throws DailyLimitReachedException
+     */
     protected function resolveType(): AuctionActType
     {
         $type = $this->option(self::OPTION_TYPE) ?? PageScheduleRepository::currentType();

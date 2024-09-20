@@ -2,17 +2,15 @@
 
 namespace App\Services\Parser;
 
-use App\Enums\AuctionActType;
+use Exception;
 use App\Enums\Param;
+use App\Enums\AuctionActType;
 use App\Exceptions\DateOutOfRangeException;
 use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\ParserException;
 use App\Exceptions\RequestLimitReachedException;
 use App\Exceptions\UnsetAuctionIdException;
 use App\Services\Abstracts\AbstractParserService;
-use Exception;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
 use PHPHtmlParser\Exceptions\CircularException;
@@ -25,6 +23,7 @@ use PHPHtmlParser\Exceptions\StrictException;
 class ParseAuctionsList extends AbstractParserService
 {
     protected const AUCTIONS_INTERVAL_MONTHS = 2;
+    protected const AUCTIONS_ROWS_PER_PAGE = 20;
     protected const AUCTIONS_SUBMIT_VALUE = 'Hľadaj';
 
     /**
@@ -75,16 +74,21 @@ class ParseAuctionsList extends AbstractParserService
      */
     public function retrieveData(): DomCollection
     {
-        $list = $this->dom->find('table.search_results')->find('tbody')->find('tr');
-        $list->count() || throw new EmptyDatasetException;
+        $rows = $this->dom->find('table.search_results')->find('tbody')->find('tr');
+        $rows->count() || throw new EmptyDatasetException;
 
         // Get data from the first column, where the
         // potential error messages are rendered
-        $sample = $list->find('td', 0)->text;
-
+        $sample = $rows->find('td', 0)->text;
         $this->validateData($sample);
 
-        return $list;
+        // Remove paging row from the collection
+        if ($this->page > 1 || $rows->count() > self::AUCTIONS_ROWS_PER_PAGE) {
+            $pagingOffset = $rows->count() - 1;
+            $rows->offsetUnset($pagingOffset);
+        }
+
+        return $rows;
     }
 
     /**
@@ -108,9 +112,15 @@ class ParseAuctionsList extends AbstractParserService
      * @throws UnsetAuctionIdException
      * @throws EmptyCollectionException
      */
-    public function sourceAuctionIdFromRow($node): string
+    public function sourceAuctionIdFromRow($node): ?string
     {
-        $uri = $node->find('td', 4)->find('a')->getAttribute('href');
+        $td = $node->find('td', 4);
+
+        if (empty(trim($td->text))) {
+            return null;
+        }
+
+        $uri = $td->find('a')->getAttribute('href');
 
         return self::retrieveAuctionIdFromUri($uri);
     }

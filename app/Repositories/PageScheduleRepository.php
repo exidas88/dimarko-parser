@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Enums\AuctionActType;
+use App\Exceptions\DailyLimitReachedException;
 use App\Models\PageSchedule;
 use App\Models\Schedule;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,12 +13,36 @@ class PageScheduleRepository
 {
     public const DEFAULT_AUCTION_TYPE = AuctionActType::NEW_AUCTION;
 
+    /**
+     * @throws DailyLimitReachedException
+     */
     public static function create(?AuctionActType $type = self::DEFAULT_AUCTION_TYPE, ?int $page = 1): PageSchedule
     {
+        self::validateDailyQuota();
+
         return PageSchedule::query()->firstOrCreate(
             [PageSchedule::TYPE => $type],
             [PageSchedule::PAGE => $page]
         );
+    }
+
+    /**
+     * We don't want to let parser work infinitely during all day, so we
+     * terminate the process once the daily quota has been reached.
+     *
+     * @throws DailyLimitReachedException
+     */
+    protected static function validateDailyQuota(): void
+    {
+        $dailyLimit = config('parser.cycles_daily_limit');
+
+        if ($dailyLimit) {
+            $processedToday = PageSchedule::withTrashed()
+                ->where(PageSchedule::DELETED_AT, '>', now()->startOfDay())
+                ->count();
+
+            $processedToday < $dailyLimit || throw new DailyLimitReachedException;
+        }
     }
 
     public static function current(): ?PageSchedule
@@ -40,6 +65,9 @@ class PageScheduleRepository
             ->delete();
     }
 
+    /**
+     * @throws DailyLimitReachedException
+     */
     public static function currentType(): ?string
     {
         $currentPageSchedule = PageScheduleRepository::current() ?? PageScheduleRepository::create();
@@ -47,6 +75,9 @@ class PageScheduleRepository
         return $currentPageSchedule->type->value;
     }
 
+    /**
+     * @throws DailyLimitReachedException
+     */
     public static function moveToNextAuctionType(): void
     {
         $types = AuctionActType::asArray();

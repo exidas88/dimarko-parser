@@ -3,7 +3,8 @@
 return [
     'debug' => env('PARSER_DEBUG', false),
     'interval_months' => env('PARSER_INTERVAL_MONTHS', 3),
-    'source_base_url' => 'https://www.notar.sk/drazby/',
+    'cycles_daily_limit' => env('PARSER_CYCLES_DAILY_LIMIT'),
+    'source_base_url' => 'https://www.notar.sk/',
     'action_source_base_url' => 'https://www.notar.sk/drazby/',
     'action_detail_base_url' => 'https://www.notar.sk/drazba/',
     'files' => [
