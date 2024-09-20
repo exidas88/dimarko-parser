@@ -111,8 +111,8 @@ class PageScheduleRepository
 
                 } else {
 
-                    // Otherwise, delete schedules to
-                    // let system create the new one
+                    // Otherwise we reached the last page, so delete
+                    // page schedule and start from the beginning
                     PageSchedule::query()->delete();
 
                 }
