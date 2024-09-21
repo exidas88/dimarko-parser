@@ -35,13 +35,13 @@ class ProcessAuctionJob implements ShouldQueue
     public function handle(): void
     {
         try {
-
-            // Parse source and prepare data
             $parser = new ParseAuctionDetails($this->auctionId, $this->type);
+
+            // Parse details and prepare collection
             $auction = $parser->retrieveData();
             $details = $parser->normalizeData($auction);
 
-            // Resolve executor and process data
+            // Run executor according to auction type
             $this->executor($details)->run();
 
         } catch (Throwable $exception) {
