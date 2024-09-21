@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Enums\AuctionActType;
 use App\Exceptions\DailyLimitReachedException;
 use App\Jobs\ScheduleAuctionsJob;
-use App\Models\PageSchedule;
 use App\Repositories\PageScheduleRepository;
 use Illuminate\Console\Command;
 

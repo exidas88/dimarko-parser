@@ -14,13 +14,13 @@ use App\Services\ChangedAuctionProcessor;
 use App\Services\NewAuctionProcessor;
 use App\Services\Parser\ParseAuctionDetails;
 use App\Services\RepeatedAuctionProcessor;
-use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ProcessAuctionJob implements ShouldQueue
 {
@@ -45,18 +45,8 @@ class ProcessAuctionJob implements ShouldQueue
             $executor = new $class($this->auctionId, $details);
             $executor->run();
 
-        } catch (EmptyDatasetException) {
-            // Auction not found
-            ScheduleRepository::delete($this->auctionId);
-//            dd('Empty dataset');
-        } catch (RequestLimitReachedException) {
-//            dd('Rate limit reached');
-            // Request limit reached
-        } catch (DateOutOfRangeException) {
-//            dd('Date out of range');
-            // Auction date out of range
-        } catch (Exception $e) {
-            Log::error('Error actId ['.$this->auctionId.'] of type ['.$this->type->value.']: ' . $e->getMessage());
+        } catch (Throwable $exception) {
+            $this->handleException($exception);
         }
     }
 
@@ -102,5 +92,35 @@ class ProcessAuctionJob implements ShouldQueue
             AuctionType::changed => ChangedAuctionProcessor::class,
             default => throw new UnsupportedAuctionTypeException
         };
+    }
+
+    protected function handleException(Throwable $exception): void
+    {
+        match (get_class($exception)) {
+            EmptyDatasetException::class => $this->handleEmptyDatasetException(),
+            RequestLimitReachedException::class => $this->handleRequestLimitReachedException(),
+            DateOutOfRangeException::class => $this->handleDateOutOfRangeException(),
+            default => $this->logErrorException($exception)
+        };
+    }
+
+    protected function handleEmptyDatasetException(): void
+    {
+        ScheduleRepository::delete($this->auctionId);
+    }
+
+    protected function handleRequestLimitReachedException(): void
+    {
+        //
+    }
+
+    protected function handleDateOutOfRangeException(): void
+    {
+        //
+    }
+
+    protected function logErrorException(Throwable $exception): void
+    {
+        Log::error('Error actId [' . $this->auctionId . '] of type [' . $this->type->value . ']: ' . $exception->getMessage());
     }
 }

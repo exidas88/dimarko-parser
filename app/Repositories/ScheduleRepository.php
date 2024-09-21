@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Enums\AuctionActType;
-use App\Models\Auction;
 use App\Models\Schedule;
 
 class ScheduleRepository
