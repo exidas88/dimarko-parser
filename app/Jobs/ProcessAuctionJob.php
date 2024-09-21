@@ -10,6 +10,7 @@ use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\RequestLimitReachedException;
 use App\Exceptions\UnsupportedAuctionTypeException;
 use App\Repositories\ScheduleRepository;
+use App\Services\Abstracts\AuctionProcessor;
 use App\Services\ChangedAuctionProcessor;
 use App\Services\NewAuctionProcessor;
 use App\Services\Parser\ParseAuctionDetails;
@@ -41,9 +42,7 @@ class ProcessAuctionJob implements ShouldQueue
             $details = $parser->normalizeData($auction);
 
             // Resolve executor and process data
-            $class = static::executor($details);
-            $executor = new $class($this->auctionId, $details);
-            $executor->run();
+            $this->executor($details)->run();
 
         } catch (Throwable $exception) {
             $this->handleException($exception);
@@ -55,11 +54,12 @@ class ProcessAuctionJob implements ShouldQueue
      *
      * @throws UnsupportedAuctionTypeException
      */
-    public static function executor(Collection $details): string
+    protected function executor(Collection $details): AuctionProcessor
     {
         $auctionType = self::resolveAuctionTypeFromDetails($details);
+        $class = self::executorFromAuctionType($auctionType);
 
-        return self::executorFromAuctionType($auctionType);
+        return new $class($this->auctionId, $details);
     }
 
     /**
