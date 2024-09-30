@@ -11,6 +11,7 @@ use App\Exceptions\ParserException;
 use App\Exceptions\RequestLimitReachedException;
 use App\Exceptions\UnsetAuctionIdException;
 use App\Services\Abstracts\AbstractParserService;
+use Illuminate\Support\Facades\Log;
 use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
 use PHPHtmlParser\Exceptions\CircularException;
@@ -114,14 +115,28 @@ class ParseAuctionsList extends AbstractParserService
      */
     public function sourceAuctionIdFromRow($node): ?string
     {
-        $td = $node->find('td', 4);
+        try {
 
-        if (empty(trim($td->text))) {
-            return null;
+            $td = $node->find('td', 4);
+            $anchor = $td->find('a');
+
+            if (empty(trim($anchor->text))) {
+                return null;
+            }
+
+            $uri = $anchor->getAttribute('href');
+
+            return self::retrieveAuctionIdFromUri($uri);
+
+        } catch (Exception) {
+
+            // If source auction id is not set when processing repeated or changed auction,
+            // we cannot continue, because we need original case that needs to be updated
+            in_array($this->type, [AuctionActType::REPEATED_AUCTION, AuctionActType::AUCTION_CHANGE_OR_ADDITION])
+            && throw new UnsetAuctionIdException;
+
         }
 
-        $uri = $td->find('a')->getAttribute('href');
-
-        return self::retrieveAuctionIdFromUri($uri);
+        return null;
     }
 }

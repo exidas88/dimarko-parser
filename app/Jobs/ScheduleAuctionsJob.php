@@ -59,6 +59,8 @@ class ScheduleAuctionsJob implements ShouldQueue
 
     protected function processAuctions(DomCollection $auctions): void
     {
+        Log::channel('debug')->info('Found ' . $auctions->count() . ' cases to process.');
+
         $auctions->each(function ($tr) {
             try {
                 $auctionId = $this->parser->auctionIdFromRow($tr);
@@ -89,6 +91,8 @@ class ScheduleAuctionsJob implements ShouldQueue
 
     protected function handleException(Throwable $exception): void
     {
+        Log::channel('debug')->info('Thrown through ' . get_class($exception));
+
         match(get_class($exception)) {
             EmptyDatasetException::class => $this->handleEmptyDatasetException(),
             RequestLimitReachedException::class => $this->handleRequestLimitReachedException(),

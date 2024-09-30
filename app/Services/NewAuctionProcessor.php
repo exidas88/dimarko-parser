@@ -13,8 +13,8 @@ use Illuminate\Support\Collection;
 
 class NewAuctionProcessor extends AuctionProcessor
 {
-    public function __construct(string $auctionId, Collection $details) {
-        parent::__construct($auctionId, $details);
+    public function __construct(protected string $incomingAuctionId, Collection $details) {
+        parent::__construct($incomingAuctionId, $details);
     }
 
     /**
@@ -32,8 +32,8 @@ class NewAuctionProcessor extends AuctionProcessor
     public function setData(): void
     {
         $this->data = collect([
-            Auction::AUCTION_ID => $this->auctionId,
-            Auction::CONNECTIONS => $this->auctionId,
+            Auction::AUCTION_ID => $this->sourceAuctionId,
+            Auction::CONNECTIONS => $this->incomingAuctionId,
             Auction::NUMBER => $this->mapper->extract(Label::number),
             Auction::COMPANY => $this->mapper->extract(Label::auctioneer),
             Auction::PROPOSER => $this->mapper->extract(Label::proposer),
@@ -42,6 +42,7 @@ class NewAuctionProcessor extends AuctionProcessor
             Auction::DATE => $this->auctionDate(),
             Auction::TIME => $this->auctionTime(),
             Auction::LISTINA => $this->document(),
+            Auction::ROUND => 1
         ]);
     }
 }

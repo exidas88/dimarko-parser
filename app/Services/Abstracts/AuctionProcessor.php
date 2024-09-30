@@ -16,38 +16,38 @@ use Illuminate\Support\Collection;
 abstract class AuctionProcessor implements AuctionProcessorInterface
 {
     protected Collection $data;
+    protected string $sourceAuctionId;
     protected LabelToAttributeMapper $mapper;
 
     abstract public function run(): void;
-
     abstract public function setData(): void;
 
-    public function __construct(protected string $auctionId, protected Collection $details)
+    public function __construct(protected string $incomingAuctionId, protected Collection $details)
     {
         $this->mapper = new LabelToAttributeMapper($this->details);
 
         // AuctionId is changed to source actId if the processing
         // auction has source_actId defined in Schedule model.
-        $this->auctionId = $this->resolveAuctionId();
+        $this->sourceAuctionId = $this->resolveSourceAuctionId();
     }
 
     public function storeData(): void
     {
         Auction::query()->updateOrCreate(
-            [Auction::AUCTION_ID => $this->auctionId],
+            [Auction::AUCTION_ID => $this->sourceAuctionId],
             $this->data->toArray(),
         );
     }
 
     /**
-     * Repeated, changed and other types should update its originals. If the source
-     * id is not set, the incoming auction id is considered as source id instead.
-     *
-     * @throws ModelNotFoundException
+     * Repeated, changed and other types should update its originals. If source
+     * id isn't set means, the new auction is currently processed, so incoming
+     * id is considered as source id. Otherwise, the incoming id is stored to
+     * auction_connections to avoid repetitive processing of the same cases.
      */
-    protected function resolveAuctionId(): string
+    protected function resolveSourceAuctionId(): string
     {
-        return ScheduleRepository::sourceAuctionId($this->auctionId) ?? $this->auctionId;
+        return ScheduleRepository::sourceAuctionId($this->incomingAuctionId) ?? $this->sourceAuctionId;
     }
 
     /**

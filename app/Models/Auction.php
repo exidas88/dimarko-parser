@@ -85,13 +85,6 @@ class Auction extends Model
         $uniqueConnections = array_unique($currentConnections);
 
         // Assign the unique array back to the attribute
-        $this->attributes[self::CONNECTIONS] = json_encode($uniqueConnections);
+        $this->attributes[self::CONNECTIONS] = $uniqueConnections;
     }
-
-//    protected function auctionConnections(): Attribute
-//    {
-//        return Attribute::make(
-//            set: fn (string $value) => dd($value),
-//        );
-//    }
 }

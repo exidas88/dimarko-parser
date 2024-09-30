@@ -68,7 +68,7 @@ abstract class AbstractParserService implements HtmlParserInterface
         $this->url .= '?' . http_build_query($this->parameters);
 
         // Log request URL
-        config('app.debug') && Log::channel('debug')->info('Request URL: ' . $this->url);
+        Log::channel('debug')->info('Request URL: ' . $this->url);
 
         // Retrieve data and set DOM
         $this->dom = $this->dom->loadFromUrl($this->url);
@@ -113,6 +113,8 @@ abstract class AbstractParserService implements HtmlParserInterface
     {
         $parameters = Str::of($uri)->after('?');
         parse_str($parameters, $queryArray);
+
+        Log::channel('debug')->info('Trying to resolve auction id from uri: ', $queryArray);
 
         $auctionId = Arr::get($queryArray, 'actId');
         $auctionId || throw new UnsetAuctionIdException;
