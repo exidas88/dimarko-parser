@@ -11,6 +11,7 @@ use App\Services\Interfaces\HtmlParserInterface;
 use App\Services\Parser\ParseAuctionDetails;
 use App\Services\Parser\ParseAuctionsList;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\Collection as DomCollection;
@@ -63,7 +64,13 @@ abstract class AbstractParserService implements HtmlParserInterface
             return;
         }
 
+        // Set request URL
         $this->url .= '?' . http_build_query($this->parameters);
+
+        // Log request URL
+        config('app.debug') && Log::channel('debug')->info('Request URL: ' . $this->url);
+
+        // Retrieve data and set DOM
         $this->dom = $this->dom->loadFromUrl($this->url);
     }
 
@@ -90,7 +97,7 @@ abstract class AbstractParserService implements HtmlParserInterface
      */
     public function validateData(string $text): void
     {
-        Str::of($text)->contains([Constant::EMPTY_DATASET_MESSAGE, Constant::INVALID_AUCTION_ID_MESSAGE])
+        Str::of($text)->contains(Constant::emptyDatasetResponse())
         && throw new EmptyDatasetException;
 
         Str::of($text)->contains(Constant::LIMIT_REACHED_MESSAGE)
