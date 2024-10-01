@@ -20,7 +20,7 @@ class ScheduleRepository
             return;
         }
 
-        LogService::auctionAlreadyExists($actId);
+        LogService::creatingScheduleForAuction($actId);
 
         Schedule::query()->updateOrCreate([
             Schedule::ACT_ID => $actId,
