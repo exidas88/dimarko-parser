@@ -8,6 +8,7 @@ use App\Exceptions\RequestLimitReachedException;
 use App\Exceptions\UnsetAuctionIdException;
 use App\Helpers\Constant;
 use App\Services\Interfaces\HtmlParserInterface;
+use App\Services\Logger\LogService;
 use App\Services\Parser\ParseAuctionDetails;
 use App\Services\Parser\ParseAuctionsList;
 use Illuminate\Support\Arr;
@@ -68,7 +69,7 @@ abstract class AbstractParserService implements HtmlParserInterface
         $this->url .= '?' . http_build_query($this->parameters);
 
         // Log request URL
-        Log::channel('debug')->info('Request URL: ' . $this->url);
+        LogService::retrieveAuctions($this->parameters);
 
         // Retrieve data and set DOM
         $this->dom = $this->dom->loadFromUrl($this->url);
@@ -114,10 +115,12 @@ abstract class AbstractParserService implements HtmlParserInterface
         $parameters = Str::of($uri)->after('?');
         parse_str($parameters, $queryArray);
 
-        Log::channel('debug')->info('Trying to resolve auction id from uri: ', $queryArray);
+        //LogService::tryToResolveAuctionId($queryArray);
 
         $auctionId = Arr::get($queryArray, 'actId');
         $auctionId || throw new UnsetAuctionIdException;
+
+        //LogService::auctionIdResolvedFromUri($auctionId);
 
         return $auctionId;
     }

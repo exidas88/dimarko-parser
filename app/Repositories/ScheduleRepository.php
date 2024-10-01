@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Enums\AuctionActType;
 use App\Models\Schedule;
+use App\Services\Logger\LogService;
 use Illuminate\Support\Facades\Log;
 
 class ScheduleRepository
@@ -15,7 +16,7 @@ class ScheduleRepository
         // existence of current actId in the list and terminate the process if it exists.
 
         if (AuctionRepository::exists($actId)) {
-            Log::channel('debug')->info("Schedule not created. Auction $actId already exists.");
+            LogService::auctionAlreadyExists($actId);
             return;
         }
 

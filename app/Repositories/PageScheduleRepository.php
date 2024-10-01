@@ -6,6 +6,7 @@ use App\Enums\AuctionActType;
 use App\Exceptions\DailyLimitReachedException;
 use App\Models\PageSchedule;
 use App\Models\Schedule;
+use App\Services\Logger\LogService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -34,7 +35,7 @@ class PageScheduleRepository
      */
     protected static function validateDailyQuota(): void
     {
-        $dailyLimit = config('parser.cycles_daily_limit');
+        $dailyLimit = (int)config('parser.cycles_daily_limit');
 
         if ($dailyLimit) {
             $processedToday = PageSchedule::withTrashed()
@@ -109,11 +110,15 @@ class PageScheduleRepository
                         PageSchedule::PAGE => 0
                     ]);
 
+                    LogService::movedToNextAuctionType($current);
+
                 } else {
 
                     // Otherwise we reached the last page, so delete
                     // page schedule and start from the beginning
                     PageSchedule::query()->delete();
+
+                    LogService::finishedCycle();
 
                 }
                 break;

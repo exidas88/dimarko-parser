@@ -4,12 +4,13 @@ namespace App\Jobs;
 
 use Exception;
 use Throwable;
+use App\Helpers\Config;
+use App\Models\PageSchedule;
 use App\Enums\AuctionActType;
+use App\Services\Logger\LogService;
 use App\Exceptions\DailyLimitReachedException;
 use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\RequestLimitReachedException;
-use App\Helpers\Config;
-use App\Models\PageSchedule;
 use App\Repositories\PageScheduleRepository;
 use App\Repositories\ScheduleRepository;
 use App\Services\Abstracts\AbstractParserService;
@@ -59,7 +60,7 @@ class ScheduleAuctionsJob implements ShouldQueue
 
     protected function processAuctions(DomCollection $auctions): void
     {
-        Log::channel('debug')->info('Found ' . $auctions->count() . ' cases to process.');
+        LogService::foundCasesToProcess($auctions);
 
         $auctions->each(function ($tr) {
             try {
@@ -81,17 +82,9 @@ class ScheduleAuctionsJob implements ShouldQueue
             ]);
     }
 
-    protected function logAttributes(): array
-    {
-        return [
-            'page' => $this->page,
-            'type' => $this->type->name
-        ];
-    }
-
     protected function handleException(Throwable $exception): void
     {
-        Log::channel('debug')->info('Thrown through ' . get_class($exception));
+        LogService::thrownThroughException($exception);
 
         match(get_class($exception)) {
             EmptyDatasetException::class => $this->handleEmptyDatasetException(),
@@ -116,6 +109,6 @@ class ScheduleAuctionsJob implements ShouldQueue
 
     protected function logErrorException(Throwable $exception): void
     {
-        Log::error("Error during processing list of auctions: " . $exception->getMessage(), $this->logAttributes());
+        LogService::unexpectedErrorException($exception);
     }
 }
