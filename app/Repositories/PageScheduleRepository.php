@@ -17,7 +17,7 @@ class PageScheduleRepository
     /**
      * @throws DailyLimitReachedException
      */
-    public static function create(?AuctionActType $type = self::DEFAULT_AUCTION_TYPE, ?int $page = 1): PageSchedule
+    public static function create(?AuctionActType $type = self::DEFAULT_AUCTION_TYPE, ?int $page = 0): PageSchedule
     {
         self::validateDailyQuota();
 
