@@ -10,8 +10,9 @@ use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\RequestLimitReachedException;
 use App\Exceptions\UnsupportedAuctionTypeException;
 use App\Repositories\ScheduleRepository;
-use App\Services\Abstracts\AuctionProcessor;
+use App\Services\Abstracts\AbstractAuctionProcessor;
 use App\Services\ChangedAuctionProcessor;
+use App\Services\Logger\LogService;
 use App\Services\NewAuctionProcessor;
 use App\Services\Parser\ParseAuctionDetails;
 use App\Services\RepeatedAuctionProcessor;
@@ -54,8 +55,10 @@ class ProcessAuctionJob implements ShouldQueue
      *
      * @throws UnsupportedAuctionTypeException
      */
-    protected function executor(Collection $details): AuctionProcessor
+    protected function executor(Collection $details): AbstractAuctionProcessor
     {
+        LogService::auctionDetailsReadyForProcessing($details);
+
         $auctionType = self::resolveAuctionTypeFromDetails($details);
         $class = self::executorFromAuctionType($auctionType);
 
@@ -96,6 +99,8 @@ class ProcessAuctionJob implements ShouldQueue
 
     protected function handleException(Throwable $exception): void
     {
+        LogService::thrownThroughException($exception);
+
         match (get_class($exception)) {
             EmptyDatasetException::class => $this->handleEmptyDatasetException(),
             RequestLimitReachedException::class => $this->handleRequestLimitReachedException(),
@@ -121,6 +126,6 @@ class ProcessAuctionJob implements ShouldQueue
 
     protected function logErrorException(Throwable $exception): void
     {
-        Log::error('Error actId [' . $this->auctionId . '] of type [' . $this->type->value . ']: ' . $exception->getMessage());
+        LogService::unexpectedErrorException($exception);
     }
 }

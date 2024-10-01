@@ -69,7 +69,11 @@ abstract class AbstractParserService implements HtmlParserInterface
         $this->url .= '?' . http_build_query($this->parameters);
 
         // Log request URL
-        LogService::retrieveAuctions($this->parameters);
+        match(get_class($this)) {
+            ParseAuctionsList::class => LogService::retrieveAuctionsList($this->parameters),
+            ParseAuctionDetails::class => LogService::retrieveAuctionDetails($this->parameters),
+            default => null
+        };
 
         // Retrieve data and set DOM
         $this->dom = $this->dom->loadFromUrl($this->url);

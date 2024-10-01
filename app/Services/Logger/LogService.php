@@ -2,6 +2,7 @@
 
 namespace App\Services\Logger;
 
+use Illuminate\Support\Collection;
 use Throwable;
 use App\Enums\LogType;
 use App\Services\Abstracts\AbstractLogService;
@@ -9,9 +10,16 @@ use PHPHtmlParser\Dom\Collection as DomCollection;
 
 class LogService extends AbstractLogService
 {
-    public static function retrieveAuctions(array $parameters): void
+    public static function retrieveAuctionsList(array $parameters): void
     {
         $message = 'Requesting URL to retrieve auctions';
+
+        self::store(type: LogType::debug, message: $message, data: $parameters);
+    }
+
+    public static function retrieveAuctionDetails(array $parameters): void
+    {
+        $message = 'Requesting URL to retrieve auction details';
 
         self::store(type: LogType::debug, message: $message, data: $parameters);
     }
@@ -39,15 +47,15 @@ class LogService extends AbstractLogService
 
     public static function thrownThroughException(Throwable $exception): void
     {
-        $message = 'Thrown through expected exception';
+        $message = 'Thrown through exception of type: ' . class_basename($exception);
 
-        self::store(type: LogType::debug, message: $message, data: get_class($exception));
+        self::store(type: LogType::debug, message: $message, data: $exception->getMessage());
     }
 
     public static function unexpectedErrorException(Throwable $exception): void
     {
-        $message = 'Error during processing list of auctions: '.$exception->getMessage();
-        $details = ['file' => $exception->getFile(), 'line' => $exception->getLine()];
+        $message = 'Unexpected error exception has occurred: '.$exception->getMessage();
+        $details = ['file' => basename($exception->getFile()), 'line' => $exception->getLine()];
 
         self::store(type: LogType::error, message: $message, data: $details);
     }
@@ -66,9 +74,30 @@ class LogService extends AbstractLogService
         self::store(type: LogType::debug, message: $message, data: $type);
     }
 
+    public static function auctionDetailsReadyForProcessing(Collection $data): void
+    {
+        $message = 'Auction details ready for processing';
+
+        self::store(type: LogType::debug, message: $message, data: $data);
+    }
+
+    public static function storingAuctionDetails(Collection $data): void
+    {
+        $message = 'Storing auction details from resolved data';
+
+        self::store(type: LogType::debug, message: $message, data: $data);
+    }
+
+    public static function resolvedSourceAuctionId(string $incomingAuctionId, ?string $sourceAuctionId): void
+    {
+        $message = "Resolved source id from incoming auction id: $incomingAuctionId";
+
+        self::store(type: LogType::debug, message: $message, data: $sourceAuctionId);
+    }
+
     public static function finishedCycle(): void
     {
-        $message = 'Finished cycle';
+        $message = 'Cycle has been finished';
 
         self::store(type: LogType::debug, message: $message, data: null);
     }

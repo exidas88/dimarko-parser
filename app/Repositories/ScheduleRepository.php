@@ -27,14 +27,21 @@ class ScheduleRepository
         ]);
     }
 
-    public static function sourceAuctionId(string $actId): ?string
+    public static function sourceAuctionId(string $incomingAuctionId): ?string
     {
         $schedule = Schedule::query()
             ->select(Schedule::SOURCE_ACT_ID)
-            ->where(Schedule::ACT_ID, $actId)
+            ->where(Schedule::ACT_ID, $incomingAuctionId)
             ->first();
 
-        return $schedule?->{Schedule::SOURCE_ACT_ID};
+        $sourceAuctionId = $schedule?->{Schedule::SOURCE_ACT_ID};
+
+        LogService::resolvedSourceAuctionId(
+            incomingAuctionId: $incomingAuctionId,
+            sourceAuctionId: $sourceAuctionId
+        );
+
+        return $sourceAuctionId;
     }
 
     public static function delete(string $actId): void

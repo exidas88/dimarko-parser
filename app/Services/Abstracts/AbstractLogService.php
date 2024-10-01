@@ -4,6 +4,7 @@ namespace App\Services\Abstracts;
 
 use App\Enums\LogType;
 use App\Models\ParserLog;
+use Illuminate\Support\Collection;
 
 abstract class AbstractLogService
 {
@@ -24,10 +25,18 @@ abstract class AbstractLogService
         ]);
     }
 
-    protected static function resolveRelatedData(mixed $data): string
+    protected static function resolveRelatedData(mixed $data): ?string
     {
+        if (!$data) {
+            return null;
+        }
+
         if (is_string($data) || is_numeric($data)) {
             return $data;
+        }
+
+        if ($data instanceof Collection) {
+            return $data->toJson();
         }
 
         if (is_array($data)) {

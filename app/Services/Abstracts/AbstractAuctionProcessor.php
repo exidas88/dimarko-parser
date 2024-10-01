@@ -3,17 +3,17 @@
 namespace App\Services\Abstracts;
 
 use App\Enums\Label;
-use App\Exceptions\DateOutOfRangeException;
 use App\Helpers\Config;
-use App\Mappers\LabelToAttributeMapper;
 use App\Models\Auction;
-use App\Repositories\ScheduleRepository;
-use App\Services\Interfaces\AuctionProcessorInterface;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Services\Logger\LogService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use App\Mappers\LabelToAttributeMapper;
+use App\Repositories\ScheduleRepository;
+use App\Exceptions\DateOutOfRangeException;
+use App\Services\Interfaces\AuctionProcessorInterface;
 
-abstract class AuctionProcessor implements AuctionProcessorInterface
+abstract class AbstractAuctionProcessor implements AuctionProcessorInterface
 {
     protected Collection $data;
     protected string $sourceAuctionId;
@@ -33,6 +33,8 @@ abstract class AuctionProcessor implements AuctionProcessorInterface
 
     public function storeData(): void
     {
+        LogService::storingAuctionDetails($this->data);
+
         Auction::query()->updateOrCreate(
             [Auction::AUCTION_ID => $this->sourceAuctionId],
             $this->data->toArray(),
@@ -47,7 +49,7 @@ abstract class AuctionProcessor implements AuctionProcessorInterface
      */
     protected function resolveSourceAuctionId(): string
     {
-        return ScheduleRepository::sourceAuctionId($this->incomingAuctionId) ?? $this->sourceAuctionId;
+        return ScheduleRepository::sourceAuctionId($this->incomingAuctionId) ?? $this->incomingAuctionId;
     }
 
     /**
@@ -83,7 +85,7 @@ abstract class AuctionProcessor implements AuctionProcessorInterface
         $date = explode(' ', $this->mapper->extract(Label::dateTime))[0];
 
         // Throw exception if auction date is out of interval
-        AuctionProcessor::validateDateRange($date);
+        static::validateDateRange($date);
 
         return $date;
     }

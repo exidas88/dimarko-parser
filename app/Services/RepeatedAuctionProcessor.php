@@ -3,13 +3,13 @@
 namespace App\Services;
 
 use App\Enums\Label;
-use App\Exceptions\DateOutOfRangeException;
 use App\Models\Auction;
-use App\Services\Abstracts\AuctionProcessor;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
+use App\Exceptions\DateOutOfRangeException;
+use App\Services\Abstracts\AbstractAuctionProcessor;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class RepeatedAuctionProcessor extends AuctionProcessor
+class RepeatedAuctionProcessor extends AbstractAuctionProcessor
 {
     public function __construct(protected string $incomingAuctionId, Collection $details) {
         parent::__construct($this->incomingAuctionId, $details);

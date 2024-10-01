@@ -6,10 +6,10 @@ use App\Enums\Label;
 use App\Models\Auction;
 use Illuminate\Support\Collection;
 use App\Exceptions\DateOutOfRangeException;
-use App\Services\Abstracts\AuctionProcessor;
+use App\Services\Abstracts\AbstractAuctionProcessor;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class ChangedAuctionProcessor extends AuctionProcessor
+class ChangedAuctionProcessor extends AbstractAuctionProcessor
 {
     public function __construct(string $incomingAuctionId, Collection $details) {
         parent::__construct($incomingAuctionId, $details);

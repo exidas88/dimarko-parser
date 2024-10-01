@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 
 class ProcessAuctionsCmd extends Command
 {
-    protected const DEFAULT_LIMIT = 5;
+    protected const DEFAULT_LIMIT = 2;
     protected const OPTION_TYPE = 'type';
     protected const OPTION_LIMIT = 'limit';
 

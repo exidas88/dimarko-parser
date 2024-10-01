@@ -3,15 +3,12 @@
 namespace App\Services;
 
 use App\Enums\Label;
-use App\Exceptions\DateOutOfRangeException;
-use App\Helpers\Config;
 use App\Models\Auction;
-use App\Services\Abstracts\AbstractParserService;
-use App\Services\Abstracts\AuctionProcessor;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use App\Exceptions\DateOutOfRangeException;
+use App\Services\Abstracts\AbstractAuctionProcessor;
 
-class NewAuctionProcessor extends AuctionProcessor
+class NewAuctionProcessor extends AbstractAuctionProcessor
 {
     public function __construct(protected string $incomingAuctionId, Collection $details) {
         parent::__construct($incomingAuctionId, $details);

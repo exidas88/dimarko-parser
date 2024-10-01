@@ -85,6 +85,6 @@ class Auction extends Model
         $uniqueConnections = array_unique($currentConnections);
 
         // Assign the unique array back to the attribute
-        $this->attributes[self::CONNECTIONS] = $uniqueConnections;
+        $this->attributes[self::CONNECTIONS] = json_encode($uniqueConnections);
     }
 }
