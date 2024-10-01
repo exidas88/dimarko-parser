@@ -67,6 +67,13 @@ class LogService extends AbstractLogService
         self::store(type: LogType::debug, message: $message, data: $auctionId);
     }
 
+    public static function creatingScheduleForAuction(string $auctionId): void
+    {
+        $message = 'Schedule for auction has been created.';
+
+        self::store(type: LogType::debug, message: $message, data: $auctionId);
+    }
+
     public static function movedToNextAuctionType(string $type): void
     {
         $message = 'Switched to next auction type';
