@@ -33,8 +33,10 @@ abstract class AbstractAuctionProcessor implements AuctionProcessorInterface
 
     public function storeData(): void
     {
+        // Log storing data
         LogService::storingAuctionDetails($this->data);
 
+        // Store Auction data
         Auction::query()->updateOrCreate(
             [Auction::AUCTION_ID => $this->sourceAuctionId],
             $this->data->toArray(),

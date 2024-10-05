@@ -62,7 +62,7 @@ class LogService extends AbstractLogService
 
     public static function auctionAlreadyExists(string $auctionId): void
     {
-        $message = 'Schedule has not been created. Auction already exists.';
+        $message = 'Schedule has not been created (actId already processed).';
 
         self::store(type: LogType::debug, message: $message, data: $auctionId);
     }
