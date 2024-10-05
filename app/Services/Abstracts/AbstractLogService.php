@@ -10,7 +10,7 @@ abstract class AbstractLogService
 {
     protected static function store(LogType $type, string $message, mixed $data): void
     {
-        if (config('app.debug') === false) {
+        if (config('parser.debug') === false) {
             return;
         }
 

@@ -1,7 +1,9 @@
 <?php
+use App\Enums\Source;
 
 return [
-    'debug' => env('PARSER_DEBUG', false),
+    'debug' => env('PARSER_DEBUG', true),
+    'source' => env('PARSER_SOURCE', Source::web->value),
     'interval_months' => env('PARSER_INTERVAL_MONTHS', 3),
     'cycles_daily_limit' => env('PARSER_CYCLES_DAILY_LIMIT'),
     'purge_logs_months' => env('PARSER_PURGE_LOGS_MONTHS', 3),

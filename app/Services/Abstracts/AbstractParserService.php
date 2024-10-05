@@ -2,6 +2,7 @@
 
 namespace App\Services\Abstracts;
 
+use App\Enums\Source;
 use App\Exceptions\EmptyDatasetException;
 use App\Exceptions\ParserException;
 use App\Exceptions\RequestLimitReachedException;
@@ -60,7 +61,7 @@ abstract class AbstractParserService implements HtmlParserInterface
      */
     protected function setDom(): void
     {
-        if (config('parser.debug')) {
+        if (config('parser.source') === Source::file->value) {
             $this->dom->loadFromFile($this->resolveFile());
             return;
         }
@@ -119,12 +120,8 @@ abstract class AbstractParserService implements HtmlParserInterface
         $parameters = Str::of($uri)->after('?');
         parse_str($parameters, $queryArray);
 
-        //LogService::tryToResolveAuctionId($queryArray);
-
         $auctionId = Arr::get($queryArray, 'actId');
         $auctionId || throw new UnsetAuctionIdException;
-
-        //LogService::auctionIdResolvedFromUri($auctionId);
 
         return $auctionId;
     }
