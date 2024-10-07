@@ -50,6 +50,11 @@ class ParseAuctionsList extends AbstractParserService
      */
     public function init(): void
     {
+        if (static::parseFromFile()) {
+            $this->setDomFromFile();
+            return;
+        }
+
         $this->setUrl(config('parser.action_source_base_url'));
         $months = $this->months ?? self::AUCTIONS_INTERVAL_MONTHS;
 
@@ -62,7 +67,7 @@ class ParseAuctionsList extends AbstractParserService
         ];
 
         $this->setParameters($parameters);
-        $this->setDom();
+        $this->setDomFromUrl();
     }
 
     /**

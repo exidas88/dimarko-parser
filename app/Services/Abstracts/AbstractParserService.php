@@ -13,7 +13,6 @@ use App\Services\Logger\LogService;
 use App\Services\Parser\ParseAuctionDetails;
 use App\Services\Parser\ParseAuctionsList;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\Collection as DomCollection;
@@ -25,7 +24,6 @@ use PHPHtmlParser\Exceptions\StrictException;
 
 abstract class AbstractParserService implements HtmlParserInterface
 {
-    public bool $debug;
     protected Dom $dom;
     protected string $url;
     protected array $parameters;
@@ -33,22 +31,6 @@ abstract class AbstractParserService implements HtmlParserInterface
     public function __construct()
     {
         $this->dom = new Dom;
-        $this->debug = config('parser.debug');
-    }
-
-    public function setUrl(string $url): void
-    {
-        $this->url = $url;
-    }
-
-    public function setParameters(array $parameters): void
-    {
-        $this->parameters = $parameters;
-    }
-
-    public function dom(): Dom
-    {
-        return $this->dom;
     }
 
     /**
@@ -56,16 +38,9 @@ abstract class AbstractParserService implements HtmlParserInterface
      * @throws ChildNotFoundException
      * @throws CircularException
      * @throws StrictException
-     * @throws LogicalException
-     * @throws ParserException
      */
-    protected function setDom(): void
+    protected function setDomFromUrl(): void
     {
-        if (config('parser.source') === Source::file->value) {
-            $this->dom->loadFromFile($this->resolveFile());
-            return;
-        }
-
         // Set request URL
         $this->url .= '?' . http_build_query($this->parameters);
 
@@ -78,6 +53,28 @@ abstract class AbstractParserService implements HtmlParserInterface
 
         // Retrieve data and set DOM
         $this->dom = $this->dom->loadFromUrl($this->url);
+    }
+
+    public function setUrl(string $url): void
+    {
+        $this->url = $url;
+    }
+
+    public function setParameters(array $parameters): void
+    {
+        $this->parameters = $parameters;
+    }
+
+    /**
+     * @throws ChildNotFoundException
+     * @throws CircularException
+     * @throws StrictException
+     * @throws LogicalException
+     * @throws ParserException
+     */
+    protected function setDomFromFile(): void
+    {
+        $this->dom->loadFromFile($this->resolveFile());
     }
 
     /**
@@ -124,6 +121,11 @@ abstract class AbstractParserService implements HtmlParserInterface
         $auctionId || throw new UnsetAuctionIdException;
 
         return $auctionId;
+    }
+
+    public static function parseFromFile(): bool
+    {
+        return config('parser.source') === Source::file->value;
     }
 
     abstract public function retrieveData(): DomCollection;

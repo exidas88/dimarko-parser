@@ -42,8 +42,8 @@ class ParseAuctionDetails extends AbstractParserService
      */
     public function init(): void
     {
-        if ($this->debug) {
-            $this->setDom();
+        if (static::parseFromFile()) {
+            $this->setDomFromFile();
             return;
         }
 
@@ -54,7 +54,7 @@ class ParseAuctionDetails extends AbstractParserService
         ];
 
         $this->setParameters($parameters);
-        $this->setDom();
+        $this->setDomFromUrl();
     }
 
     /**
