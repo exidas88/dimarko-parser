@@ -5,7 +5,6 @@ namespace App\Repositories;
 use App\Enums\AuctionActType;
 use App\Models\Schedule;
 use App\Services\Logger\LogService;
-use Illuminate\Support\Facades\Log;
 
 class ScheduleRepository
 {

@@ -47,12 +47,11 @@ class ParseAuctionDetails extends AbstractParserService
             return;
         }
 
-        $this->setUrl(config('parser.action_detail_base_url'));
-
         $parameters = [
             Param::auctionId->value => $this->auctionId,
         ];
 
+        $this->setUrl(config('parser.action_detail_base_url'));
         $this->setParameters($parameters);
         $this->setDomFromUrl();
     }

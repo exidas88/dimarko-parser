@@ -11,7 +11,6 @@ use App\Exceptions\ParserException;
 use App\Exceptions\RequestLimitReachedException;
 use App\Exceptions\UnsetAuctionIdException;
 use App\Services\Abstracts\AbstractParserService;
-use Illuminate\Support\Facades\Log;
 use PHPHtmlParser\Dom\Collection as DomCollection;
 use PHPHtmlParser\Exceptions\ChildNotFoundException;
 use PHPHtmlParser\Exceptions\CircularException;
@@ -55,7 +54,6 @@ class ParseAuctionsList extends AbstractParserService
             return;
         }
 
-        $this->setUrl(config('parser.action_source_base_url'));
         $months = $this->months ?? self::AUCTIONS_INTERVAL_MONTHS;
 
         $parameters = [
@@ -66,6 +64,7 @@ class ParseAuctionsList extends AbstractParserService
             Param::submit->value => self::AUCTIONS_SUBMIT_VALUE
         ];
 
+        $this->setUrl(config('parser.action_source_base_url'));
         $this->setParameters($parameters);
         $this->setDomFromUrl();
     }
