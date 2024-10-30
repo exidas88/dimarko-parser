@@ -15,6 +15,7 @@ use App\Services\ChangedAuctionProcessor;
 use App\Services\Logger\LogService;
 use App\Services\NewAuctionProcessor;
 use App\Services\Parser\ParseAuctionDetails;
+use App\Services\RenouncementAuctionProcessor;
 use App\Services\RepeatedAuctionProcessor;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -92,6 +93,7 @@ class ProcessAuctionJob implements ShouldQueue
             AuctionType::new => NewAuctionProcessor::class,
             AuctionType::repeated => RepeatedAuctionProcessor::class,
             AuctionType::changed => ChangedAuctionProcessor::class,
+            AuctionType::renouncement => RenouncementAuctionProcessor::class,
             default => throw new UnsupportedAuctionTypeException
         };
     }
