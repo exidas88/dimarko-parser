@@ -36,7 +36,6 @@ class RepeatedAuctionProcessor extends AbstractAuctionProcessor
             Auction::NUMBER => $this->mapper->extract(Label::number),
             Auction::COMPANY => $this->mapper->extract(Label::auctioneer),
             Auction::PROPOSER => $this->mapper->extract(Label::proposer),
-            Auction::REALITY_TYPE => $this->mapper->extract(Label::subject),
             Auction::PLACE => $this->mapper->extract(Label::place),
             Auction::DATE => $this->auctionDate(),
             Auction::TIME => $this->auctionTime(),
