@@ -30,7 +30,7 @@ class ProcessAuctionJob implements ShouldQueue
 
     public function __construct(protected string $auctionId, protected AuctionActType $type)
     {
-        //
+        LogService::$auctionId = $this->auctionId;
     }
 
     public function handle(): void

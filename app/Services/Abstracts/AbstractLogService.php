@@ -8,7 +8,9 @@ use Illuminate\Support\Collection;
 
 abstract class AbstractLogService
 {
-    protected static function store(LogType $type, string $message, mixed $data): void
+    public static ?string $auctionId = null;
+
+    protected static function store(LogType $type, string $message, mixed $data = null): void
     {
         if (config('parser.debug') === false) {
             return;
@@ -20,6 +22,7 @@ abstract class AbstractLogService
             ParserLog::TYPE => $type,
             ParserLog::MESSAGE => $message,
             ParserLog::DATA => self::resolveRelatedData($data),
+            ParserLog::ACT_ID => self::$auctionId,
             ParserLog::CREATED_AT => $now,
             ParserLog::UPDATED_AT => $now,
         ]);

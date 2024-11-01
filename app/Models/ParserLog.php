@@ -12,6 +12,7 @@ class ParserLog extends Model
     public const TYPE = 'type';
     public const MESSAGE = 'message';
     public const DATA = 'related_data';
+    public const ACT_ID = 'related_actid';
 
     public $timestamps = true;
     protected $guarded = [self::ID];
